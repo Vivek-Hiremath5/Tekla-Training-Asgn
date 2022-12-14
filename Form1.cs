@@ -1,15 +1,17 @@
 ﻿using System;
-using Tekla.Structures.Model.Operations;
-using System.Windows.Forms;
 using Tekla.Structures.Model;
+using Tekla.Structures.Model.Operations;
 using Tekla.Structures.Geometry3d;
-using Tekla.Structures.ModelInternal;
+//using System.Runtime.InteropServices;
+using System.Windows.Forms;
+using System.Collections.Generic;
 
-namespace TeklaApp1
+namespace Tekla2
 {
+
     public partial class Form1 : Form
     {
-        public int count = 0;
+
         public Form1()
         {
             InitializeComponent();
@@ -19,60 +21,79 @@ namespace TeklaApp1
         {
 
         }
+
         private void button1_Click(object sender, EventArgs e)
         {
-            double x=Convert.ToDouble(textBox1.Text);
-                var model = new Model();
-                var point = new Point(0, 0, 0);
+            Model model = new Model();
 
-            var profile = new Profile { ProfileString = "RHS400*300*6" };
-            var material = new Material { MaterialString = "Steel_Undefined" };
-            var finish = "PAINT";
-            var theClass = "3";
-            if (checkBox1.Checked.Equals(true)) {
-                var point2 = new Point(x, 0, 0); 
-                var beam = new Beam(point, point2);
-                beam.Profile = profile;
-                beam.Material = material;
-                beam.Finish = finish;
-                beam.Insert();
-                model.CommitChanges();
-
-            }
-            else if(checkBox2.Checked.Equals(true))
+            if (model.GetConnectionStatus())
             {
-                var point2 = new Point(0, x, 0);
-                var beam = new Beam(point, point2);
-                beam.Profile = profile;
-                beam.Material = material;
-                beam.Finish = finish;
-                beam.Insert();
-                model.CommitChanges();
+                int count = 0;
+                double x = double.Parse(textBox1.Text);
+                double y = double.Parse(textBox2.Text);
+                Point p1 = new Point(y, y, 0);
+                Point p2 = new Point(x+y, 0+y, 0);
+                Point p3 = new Point(x+y, x+y, 0);
+                Point p4 = new Point(0+y, x+y, 0);
+                Point c1 = new Point(0 + y, 0 + y, x);
+                Point c2 = new Point(x + y, 0 + y, x);
+                Point c3=new Point(x + y, x + y, x);
+                Point c4=new Point(0 + y, x + y, x);
+                List<Beam> myBeam = new List<Beam>()
+                {
+                    new Beam(p1,p2),
+                    new Beam(p2,p3),
+                    new Beam(p3,p4),
+                    new Beam(p4,p1),
+                    new Beam(p1,c1),
+                    new Beam(p2,c2),
+                    new Beam(p3,c3),
+                    new Beam(p4,c4),
+                    new Beam(c1,c2),
+                    new Beam(c2,c3),
+                    new Beam(c3,c4),
+                    new Beam(c4,c1),
+                };
+                foreach (Beam beam in myBeam)
+                {
+                    count++;
+                    beam.Material.MaterialString = "Steel_Undefined";
+                    beam.Profile.ProfileString = "RHS400*300*6";
+                    beam.Class = "3";
+                    if (count == 2||count==4)
+                    {
+                        beam.Position.Plane = Position.PlaneEnum.RIGHT;
+                        beam.Position.PlaneOffset = 1;
+                        beam.Position.RotationOffset = 1;
+                        beam.Position.DepthOffset = 1;
+                    }
+                    if (count == 6 || count == 7)
+                    {
+                        beam.Position.Depth = Position.DepthEnum.FRONT;
+                    }
+                    if (count > 8)
+                    {
+                        beam.Position.Depth = Position.DepthEnum.FRONT;
+                        
+                        if (count == 10 || count == 12)
+                        {
+                            beam.Position.Plane = Position.PlaneEnum.RIGHT;
+                        }
+                    }
+                    beam.Insert();
+                    model.CommitChanges();
+                }
+                
+
             }
-                
-                
-            
+
+
         }
 
-        private void button2_Click(object sender, EventArgs e)
+        private void richTextBox1_TextChanged(object sender, EventArgs e)
         {
 
-            Model model=new Model();
-            ContourPoint point3 = new ContourPoint(new Point(5000, 2000, 0), null);
-            ContourPoint point4 = new ContourPoint(new Point(2000, 2000, 0), null);
-            ContourPoint point5 = new ContourPoint(new Point(0, 4000, 0), null);
-
-            PolyBeam PolyBeam = new PolyBeam();
-
-
-            PolyBeam.AddContourPoint(point3);
-            PolyBeam.AddContourPoint(point4);
-            PolyBeam.AddContourPoint(point5);
-            PolyBeam.Profile.ProfileString = "RHS400*300*8";
-            PolyBeam.Finish = "PAINT";
-            bool Result = false;
-            Result = PolyBeam.Insert();
-            model.CommitChanges();
         }
     }
 }
+       
